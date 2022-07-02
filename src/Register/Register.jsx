@@ -6,28 +6,30 @@ import "./Register.css";
 
 function Register(props) {
   const [data, setData] = useState({});
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [newAccountNum, setNewAccountNum] = useState();
   const navigate = useNavigate();
 
-  const API = `http://localhost:9091/api/generateAccountNumber`;
+  const userAPI = "http://localhost:9091/api";
+
   const handleChange = e => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
   const submitForm = e => {
     e.preventDefault();
+    createUser(data);
+  };
 
-    UserService.addUserInfo(data)
+  const createUser = user => {
+    axios
+      .post(`${userAPI}/addUser/`, user)
       .then(response => {
-        response.json().then(val => {
-          console.log("Successful" + val);
-        });
+        console.log("Responsee-->", response);
+        navigate("/registerSuccess");
       })
       .catch(error => {
-        if (error.response) {
-          console.log("Error in Response", error.response);
-        }
+        console.log(" Error Message: " + error);
+      })
+      .finally(() => {
+        console.log("in finally");
       });
   };
 

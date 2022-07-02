@@ -1,11 +1,10 @@
 import axios from "axios";
-import { isConstructorDeclaration } from "typescript";
 const API_URL = "http://localhost:9091/api";
-const API = "http://localhost:9091/api/users/find?loginName=kim.koe";
 class UserService {
 
-    addUserInfo(user) {
-        return axios.post(`${API_URL}/addUser/`, user);
+    async addUserInfo(user) {
+        console.log("from user service-->", axios.post(`${API_URL}/addUser/`, user))
+        return await axios.post(`${API_URL}/addUser/`, user);
     }
 
 

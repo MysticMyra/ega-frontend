@@ -78,7 +78,10 @@ function UserAccount(props) {
 
   const transferFunds = e => {
     e.preventDefault();
-    navigate("/transferFunds");
+    // navigate("/transferFunds");
+    navigate("/transferFunds", {
+      state: { accountNumber: data.accountNumber }
+    });
   };
   return (
     <div className="container login">
