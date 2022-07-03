@@ -4,7 +4,10 @@ import Context1 from "../Context1";
 
 const TransactionDetails = () => {
   const accountNumber = useContext(Context1);
-  console.log("Transa details", accountNumber);
+  console.log("Transa details---->", accountNumber);
+  const API = useEffect(() => {
+    //    loadTransactions(accountNumber);
+  });
 
   return (
     <div>

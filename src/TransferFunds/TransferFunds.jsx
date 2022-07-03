@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import "./TransferFunds.css";
 import axios from "axios";
-import { onceSupported } from "dom-helpers/cjs/addEventListener";
+import React, { useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Context } from "../Store";
+import "./TransferFunds.css";
 
 function TransferFunds(props) {
+  const [state, dispatch] = useContext(Context);
   const [data, setData] = useState({});
   const [success, setSuccess] = useState(false);
   const [accountNumber, setAccountNumber] = useState();
+  const [loginName, setLoginName] = useState();
 
-  const [depositForm, setDepositForm] = useState();
-  const [successTransaction, setSuccessTransaction] = useState();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const transAPI = `  http://localhost:9091/api/account/${accountNumber}/transactions`;
+  const transAPI = `  http://localhost:9091/api/account/${state.users.accountNumber}/transactions`;
 
   const handleChange = e => {
     //  setData({ ...data, [e.target.name]: e.target.value });
@@ -42,23 +42,23 @@ function TransferFunds(props) {
       .post(transAPI, transactionData)
       .then(response => {
         console.log("Responsee-->", response);
-        setSuccessTransaction(true);
+        // changed for context setSuccessTransaction(true);
+        dispatch({ type: "ADD_TRANSACTION", payload: response.data });
       })
       .catch(error => {
-        console.log(" Error Message: " + error);
+        // chnaged for context console.log(" Error Message: " + error);
+        dispatch({ type: "SET_ERROR", payload: error });
       })
       .finally(() => {
         console.log("in finally");
       });
   };
 
-  useEffect(() => {
-    setAccountNumber(location.state.accountNumber);
-  });
-
   return (
     <div className="container login">
-      <div className="loginTitle mb-3">Transfer Details : {accountNumber}</div>
+      <div className="loginTitle mb-3">
+        Transfer Details : {state.users.accountNumber}
+      </div>
       <br />
 
       <br />
@@ -94,7 +94,7 @@ function TransferFunds(props) {
                     className="form-control"
                     name="amount"
                     placeholder="AED"
-                    value={data.amount}
+                    value={state.account.amount}
                     onChange={e => handleChange(e)}
                   />
                 </div>
@@ -112,7 +112,7 @@ function TransferFunds(props) {
                     className="form-control"
                     name="transactionDescription"
                     placeholder=""
-                    value={data.transactionDescription}
+                    value={state.transactions.transactionDescription}
                     onChange={e => handleChange(e)}
                   />
                 </div>
@@ -130,7 +130,7 @@ function TransferFunds(props) {
                     className="form-control"
                     name="transferType"
                     placeholder=""
-                    value={data.transferType}
+                    value={state.transactions.transferType}
                     onChange={e => handleChange(e)}
                   />
                 </div>
@@ -143,6 +143,7 @@ function TransferFunds(props) {
               >
                 Continue
               </button>
+
               <button
                 className="btn btn-primary button2"
                 type="submit"
@@ -153,7 +154,7 @@ function TransferFunds(props) {
               <br />
               <br />
             </form>
-            {successTransaction ? (
+            {success ? (
               <div class="alert alert-success" role="alert">
                 Transaction Successful!
               </div>

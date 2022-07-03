@@ -1,36 +1,36 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Button, Card, Col, Row } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import TransactionDetails from "../TransactionDetails/TransactionDetails";
-import profilePhoto from "./profilePhoto.jpg";
-import { useLocation } from "react-router-dom";
-import "./UserAccount.css";
 import axios from "axios";
-import Context1 from "../Context1";
+import React, { useContext, useEffect, useState } from "react";
+import { Button, Card, Col, Row, Table } from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Context } from "../Store";
+import profilePhoto from "./profilePhoto.jpg";
+import "./UserAccount.css";
 
 function UserAccount(props) {
+  const [state, dispatch] = useContext(Context);
+
   const [data, setData] = useState([]);
-  const [accountData, setAccountData] = useState([]);
   const [error, setError] = useState(false);
-  const [loginName, setLoginName] = useState();
   const [transactionFlag, setTransactionFlag] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const accountNumber = useContext(Context1);
-  console.log("Transa details", accountNumber);
+  var srNo = 1;
 
-  const UserAPI = `http://localhost:9091/api/users/find?loginName=${loginName}`;
-  const AccountAPI = `http://localhost:9091/api/account/${data.accountNumber}`;
+  const UserAPI = `http://localhost:9091/api/users/find?loginName=${state.users.loginName}`;
+  const AccountAPI = `http://localhost:9091/api/account/${state.users.accountNumber}`;
+  const TransactionAPI = `http://localhost:9091/api/account/${state.users.accountNumber}/transactions`;
 
   const fetchUserDetails = API => {
     axios
       .get(API)
       .then(response => {
-        setData(response.data);
+        //--> changed for context setData(response.data);
+        dispatch({ type: "SET_USERS", payload: response.data });
       })
       .catch(err => {
-        setError(true);
+        // changed for context setError(true);
+        dispatch({ type: "SET_ERROR", payload: error });
         console.log("->catch", error);
         if (err.response) {
           console.log("Error in Response", error.response.data);
@@ -48,10 +48,12 @@ function UserAccount(props) {
     axios
       .get(AccountAPI)
       .then(response => {
-        setAccountData(response.data);
+        // changed fro context setAccountData(response.data);
+        dispatch({ type: "SET_USER_ACCOUNT", payload: response.data });
       })
       .catch(err => {
-        setError(true);
+        // chnaged for context setError(true);
+        dispatch({ type: "SET_ERROR", payload: error });
         console.log("accountData ->catch", error);
         if (err.response) {
           console.log(" Error in Response", error.response.data);
@@ -65,11 +67,36 @@ function UserAccount(props) {
         console.log(error);
       });
   };
+
+  const fetchTransactionDetails = TransactionAPI => {
+    axios
+      .get(TransactionAPI)
+      .then(response => {
+        // changed for context setTransactionData(response.data);
+        dispatch({ type: "SET_TRANSACTIONS", payload: response.data });
+      })
+      .catch(err => {
+        //changed for context setError(true);
+        dispatch({ type: "SET_ERROR", payload: error });
+
+        console.log("transactionData ->catch", error);
+        if (err.response) {
+          console.log(" Error in Response", error.response.data);
+        } else if (err.request) {
+          console.log(err.request);
+        } else {
+          console.log(" Transaction Error Message: " + error);
+        }
+      })
+      .finally(() => {
+        console.log(error);
+      });
+  };
   useEffect(() => {
-    setLoginName(location.state.loginName);
     fetchUserDetails(UserAPI);
     fetchAccountDetails(AccountAPI);
-  }, [UserAPI, AccountAPI]);
+    fetchTransactionDetails(TransactionAPI);
+  }, [UserAPI, AccountAPI, TransactionAPI]);
 
   const viewTransactions = e => {
     e.preventDefault();
@@ -116,7 +143,9 @@ function UserAccount(props) {
                             readOnly
                             className="form-control-plaintext text-uppercase"
                             id="staticEmail"
-                            value={data.firstName + " " + data.lastName}
+                            value={
+                              state.users.firstName + " " + state.users.lastName
+                            }
                           />
                         </div>
                       </div>
@@ -135,7 +164,7 @@ function UserAccount(props) {
                             readOnly
                             class="form-control-plaintext"
                             id="staticEmail"
-                            value={data.accountNumber}
+                            value={state.users.accountNumber}
                           />
                         </div>
                       </div>
@@ -152,7 +181,7 @@ function UserAccount(props) {
                             readOnly
                             class="form-control-plaintext"
                             id="staticEmail"
-                            value={"AED " + accountData.currentBalance}
+                            value={"AED " + state.account.currentBalance}
                           />
                         </div>
                       </div>
@@ -180,7 +209,57 @@ function UserAccount(props) {
           <br />
           <br />
           <br />
-          {transactionFlag ? <TransactionDetails /> : ""}
+          <div>
+            <Table striped bordered hover size="sm">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Transfer Type</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionFlag && state.transactions
+                  ? state.transactions.map(data => (
+                      <tr key={data.transactionId}>
+                        <td>{srNo++}</td>
+                        <td>25-06-2022</td>
+                        <td>{data.transactionDescription}</td>
+                        <td>{data.transferType}</td>
+                        <td>AED {data.account.currentBalance}</td>
+                      </tr>
+                    ))
+                  : ""}{" "}
+              </tbody>
+            </Table>
+
+            {/* {transactionFlag && transactionData
+              ? transactionData.map(data => (
+                  <Table striped bordered hover size="sm">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Transfer Type</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr key={data.transactionId}>
+                        <td>{srNo++}</td>
+                        <td>25-06-2022</td>
+                        <td>{data.transactionDescription}</td>
+                        <td>{data.transferType}</td>
+                        <td>AED {data.account.currentBalance}</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                ))
+              : ""} */}
+          </div>
         </div>
       </div>
     </div>
